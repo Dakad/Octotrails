@@ -1,11 +1,13 @@
 import { Component, OnInit, Input } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import { Location } from '@angular/common';
+import { MatSnackBar, MatDialog } from '@angular/material';
 
-import { Question } from '../question';
 import { QuestionService } from '../question.service';
 import { Data } from '../../shared/providers/data.provider';
 import { Category } from '../category';
+import { DialogConfirmComponent } from '../../shared/components';
+import { map } from 'rxjs/operators';
 
 @Component({
   templateUrl: './questions-overview.component.html',
@@ -19,8 +21,11 @@ export class QuestionsOverviewComponent implements OnInit {
   stop_id: string;
   category: Category;
 
-  public get isDoneBtnDisabled(): boolean {
-    return this.answeredQuestions == 0;
+  categoryName: string;
+  categoryParentName: string;
+
+  public get hasAnswered(): boolean {
+    return this.answeredQuestions !== 0;
   }
 
   constructor(
@@ -28,7 +33,9 @@ export class QuestionsOverviewComponent implements OnInit {
     private router: Router,
     private location: Location,
     private questionService: QuestionService,
-    private data: Data
+    private data: Data,
+    public snackBar: MatSnackBar,
+    private dialog: MatDialog
   ) {}
 
   /**
@@ -42,6 +49,13 @@ export class QuestionsOverviewComponent implements OnInit {
     this.questions = this.route.snapshot.data['questions'];
     this.category = this.route.snapshot.data['category'];
     this.totalNumberOfQuestions = this.questions.length;
+    if (this.category.parent) {
+      this.categoryParentName = this.category.parent.name;
+      this.categoryName = this.category.name;
+    } else {
+      this.categoryName = null;
+      this.categoryParentName = this.category.name;
+    }
   }
 
   /**
@@ -72,13 +86,6 @@ export class QuestionsOverviewComponent implements OnInit {
   }
 
   /**
-   * Go back to the previous location
-   */
-  goBack(): void {
-    this.location.back();
-  }
-
-  /**
    * Get the answers from the localStorage and save them to the database
    */
   saveAnswers() {
@@ -90,8 +97,22 @@ export class QuestionsOverviewComponent implements OnInit {
     return this.questionService
       .saveAnswers(this.stop_id, answers)
       .subscribe(msg => {
-        console.log(msg);
+        return this.router
+          .navigate(['stops', this.stop_id, 'categories'])
+          .then(_ =>
+            this.snackBar.open("New stop's updates SAVED", 'Undo', {
+              duration: 2500
+            })
+          );
       });
+  }
+
+  openDialog() {
+    const dialogRef = this.dialog.open(DialogConfirmComponent, {
+      width: '250px'
+    });
+
+    return dialogRef.afterClosed().pipe(map(result => result == 'true'));
   }
 
   /**
@@ -99,16 +120,17 @@ export class QuestionsOverviewComponent implements OnInit {
    * save answers or clear localStorage depending on the answer from the popup
    */
   cancel() {
-    const OK = window.confirm('Do you want to save your progress?');
-
-    if (OK) {
-      this.saveAnswers();
-    } else {
-      // this.questionService.clearAnswers();
-      localStorage.clear();
+    if (this.hasAnswered) {
+      // const OK = window.confirm('Do you want to save your progress?');
+      this.openDialog().subscribe(wantTosave => {
+        if (wantTosave) {
+          this.saveAnswers();
+        } else {
+          // this.questionService.clearAnswers();
+          localStorage.clear();
+        }
+        return this.router.navigate(['stops', this.stop_id, 'categories']);
+      });
     }
-
-    // return this.router.navigate(['stops', this.stop_id, 'categories']);
-    return this.router.navigate(['stops', this.stop_id, 'categories']);
   }
 }

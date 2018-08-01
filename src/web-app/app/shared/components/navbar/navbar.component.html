@@ -16,11 +16,18 @@
               fill=url(#grad1)/>
           </g>
         </svg>
-        Back
+        {{'navbar.button.back' | translate}}
       </a>
+      <div class="lang-switch-select">
+
+        <mat-select [(value)]="activeLang">
+          <mat-option [value]="lang" *ngFor="let lang of langs">{{lang | uppercase}}</mat-option>
+        </mat-select>
+      </div>
+
 
       <ng-container *ngIf="isOnQuestionsPage">
-        <button class="done-button" [disabled]="doneBtnDisabled" (click)="OnDone()">Done</button>
+        <button class="done-button" [disabled]="doneBtnDisabled" (click)="onDone()">{{'navbar.button.done' | translate}}</button>
       </ng-container>
 
       <ng-container *ngIf="isOnStopDetailPage">
@@ -53,16 +60,19 @@
 
     </div>
 
-
-
     <ng-container *ngIf="isOnQuestionsPage">
-      <h1 class="section-title">Accessibility</h1>
-      <h2 class="section-sub-title">Physical</h2>
+      <h1 class="section-title">{{title}}</h1>
+      <h2 class="section-sub-title">{{subTitle}}</h2>
     </ng-container>
 
     <ng-container *ngIf="isOnStopDetailPage || isOnLocationPage">
       <h1 class="section-title">{{stopName}}</h1>
       <h2 class="section-sub-title">ID : {{stopId}}</h2>
+      <h2 *ngIf="lastHistory" (click)="gotToLastHistory()">
+        <a>
+          <img class="button-icon" src="/assets/icons/history.svg" width="30" height="30" alt="" /> {{lastHistory.created_at}}
+        </a>
+      </h2>
     </ng-container>
 
     <ng-container *ngIf="isOnHistoriesPage && !historyDate">
@@ -76,8 +86,8 @@
     </ng-container>
 
     <ng-container *ngIf="isOnCategoriesPage && !isOnQuestionsPage">
-      <h1 class="section-title">Categories</h1>
-      <h2 class="section-sub-title">Choose a category</h2>
+      <h1 class="section-title">{{'navbar.categories.title' | translate}}</h1>
+      <h2 class="section-sub-title">{{'navbar.categories.choose' | translate}}</h2>
     </ng-container>
 
     <ng-content></ng-content>

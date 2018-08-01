@@ -27,9 +27,24 @@ export class Transport {
   get textColor(): string {
     return '#' + this.route_text_color;
   }
+
+  directionByLang(lang: string = 'fr'): string {
+    return this.direction[lang];
+  }
 }
 
-const images_stops_id:string[] = ['1348','1349','1350','1351','1356'];
+const images_stops_id: string[] = [
+  '1348',
+  '1349',
+  '1350',
+  '1351',
+  '1356',
+  '3331',
+  '3351',
+  '6309F',
+  '6356F'
+];
+
 export class Stop {
   id: string;
   alpha: {
@@ -50,10 +65,22 @@ export class Stop {
   transport: Transport[];
 
   public get images(): string[] {
-    if(images_stops_id.includes(this.id)) {
+    if (images_stops_id.includes(this.id)) {
       return ['1', '2', '3'].map(mb => `/assets/img/${this.id}-${mb}.jpg`);
     }
     return [];
+  }
+
+  public get uniqLines(): Transport[] {
+    const uniq = {};
+    const distincts = [];
+    this.transport.forEach(ln => {
+      if (!uniq[ln.number]) {
+        distincts.push(ln);
+        uniq[ln.number] = true;
+      }
+    });
+    return distincts;
   }
 
   /**
@@ -67,5 +94,17 @@ export class Stop {
         this.transport = fields.transport.map(tr => new Transport(tr));
       }
     }
+  }
+
+  alphaByLang(lang: string = 'fr'): string {
+    return this.alpha[lang];
+  }
+
+  descrByLang(lang: string = 'fr'): string {
+    return this.descr[lang];
+  }
+
+  addressByLang(lang: string = 'fr'): string {
+    return this.address[lang];
   }
 }
